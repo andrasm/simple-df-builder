@@ -14,7 +14,8 @@ A lightweight, efficient .NET library for writing Parquet files with a simple bu
 ## Installation
 
 ```bash
-dotnet add package Bendo.SimpleParquetWriter
+# not published yet
+# dotnet add package Bendo.SimpleParquetWriter
 ```
 
 ## Quick Start
@@ -48,7 +49,6 @@ writer.NextRecord();
 
 - The parquet file is written in a background thread and finalized when the writer is disposed
 - Column order must be the same for every row (this improves performance by avoiding dictionary lookups)
-- The writer supports various .NET types 
 
 ## Configuration
 
