@@ -1,0 +1,24 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>net8.0</TargetFramework>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>enable</Nullable>
+  </PropertyGroup>
+
+  <PropertyGroup>
+    <PackageId>Bendo.SimpleParquetWriter</PackageId>
+    <Version>0.1.0</Version>
+    <Authors>andrasm</Authors>
+    <Description>Efficient Parquet writer for .NET</Description>
+    <PackageLicenseExpression>MIT</PackageLicenseExpression>
+    <PackageProjectUrl>https://github.com/andrasm/simple-parquet-writer</PackageProjectUrl>
+    <RepositoryUrl>https://github.com/andrasm/simple-parquet-writer</RepositoryUrl>
+    <PackageTags>parquet;data;analytics</PackageTags>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="ParquetSharp" Version="18.1.0" />
+  </ItemGroup>
+
+</Project>
