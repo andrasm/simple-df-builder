@@ -6,7 +6,7 @@ using Encoding = System.Text.Encoding;
 
 namespace Bendo.SimpleParquetWriter;
 
-public sealed class ParquetWriter : IDisposable
+public sealed class SimpleParquetWriter : IDisposable
 {
     public static Action<string> Logger = s => Console.WriteLine(s);
     private readonly string _filename;
@@ -32,7 +32,6 @@ public sealed class ParquetWriter : IDisposable
     private readonly List<DateTime[]> _dateCols = [];
     private readonly List<string[]> _stringCols = [];
     private readonly List<bool[]> _boolCols = [];
-    
     private readonly List<int> _colIndices = [];
 
     private byte[] _active;
@@ -40,9 +39,9 @@ public sealed class ParquetWriter : IDisposable
     private bool _firstRowSeen;
     private int _colIx = 0;
     private int _dataIx = 0;
-    private ParquetFileWriter _parquetWriter;
+    private ParquetFileWriter? _parquetWriter;
 
-    public ParquetWriter(string filename, int recordsInRowGroup = 65536, bool zstd = true, bool append = false)
+    public SimpleParquetWriter(string filename, int recordsInRowGroup = 65536, bool zstd = true, bool append = false)
     {
         IsActive = true;
         _filename = filename;
