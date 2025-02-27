@@ -8,7 +8,7 @@
 
   <PropertyGroup>
     <PackageId>Bendo.SimpleDataFrameBuilder</PackageId>
-    <Version>0.1.1</Version>
+    <Version>0.1.2</Version>
     <Authors>andrasm</Authors>
     <Description>An efficient row-oriented dataframe builder and Parquet writer for .NET</Description>
     <PackageLicenseExpression>MIT</PackageLicenseExpression>
