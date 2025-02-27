@@ -7,7 +7,7 @@ A lightweight, efficient .NET library for writing Parquet files with a simple bu
 - Stream-like API for building dataframes row by row
 - Background thread writing for improved performance
 - Strong typing for various data types
-- Minimal memory footprint
+- Minimal memory footprint and allocations
 - No dictionary lookups for column names (uses ordered columns)
 - Uses ParquetSharp under the hood
 
@@ -15,7 +15,7 @@ A lightweight, efficient .NET library for writing Parquet files with a simple bu
 
 ```bash
 # not published yet
-# dotnet add package Bendo.SimpleParquetWriter
+# dotnet add package Bendo.SimpleDataFrameBuilder
 ```
 
 ## Quick Start
@@ -47,14 +47,32 @@ writer.NextRecord();
 
 ## Important Notes
 
-- The parquet file is written in a background thread and finalized when the writer is disposed
 - Column order must be the same for every row (this improves performance by avoiding dictionary lookups)
+- The parquet file is written in a background thread and finalized when the writer is disposed
+- The writer must be disposed to ensure all data is written correctly
+- Try to avoid string construction in the `WriteField` method to reduce allocations (use string constants or reuse strings). 
+  - You can use the optional `int idx=-1` argument to help with this, e.g.:
+
+#### Example: use the optional `idx` argument to avoid string construction:
+```csharp
+for (int i = 0; i < 3; i++)
+{    
+    writer.WriteField("address_line_{0}", addresses[i], i);
+}
+
+// ...
+
+// is equivalent to:
+writer.WriteField("address_line_0", addresses[0]);
+writer.WriteField("address_line_1", addresses[1]);
+writer.WriteField("address_line_2", addresses[2]);
+```
 
 ## Configuration
 
 ### Logging
 
-By default, the library logs to the console, but you can configure your own logging:
+By default, the library logs a few events to the console, but you can configure your own logging:
 
 ```csharp
 // Set custom logger
@@ -70,11 +88,9 @@ For development or debugging, you can enable column order validation:
 SimpleParquetWriter.VerifyColumnOrder = true;
 ```
 
-## Performance Considerations
+## Project status
 
-- Column names are not used for dictionary lookups, making field writing very efficient
-- Data is buffered in memory and written in a background thread
-- Make sure to properly dispose the writer to ensure all data is written correctly
+Stable and used in production by the author. Just recently open-sourced and didn't bother porting the tests yet.
 
 ## License
 

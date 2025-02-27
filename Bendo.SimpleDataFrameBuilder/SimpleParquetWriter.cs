@@ -4,7 +4,7 @@ using System.Runtime.CompilerServices;
 using ParquetSharp;
 using Encoding = System.Text.Encoding;
 
-namespace Bendo.SimpleParquetWriter;
+namespace Bendo.SimpleDataFrameBuilder;
 
 public sealed class SimpleParquetWriter : IDisposable
 {
