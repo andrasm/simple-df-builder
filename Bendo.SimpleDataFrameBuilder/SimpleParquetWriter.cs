@@ -43,7 +43,6 @@ public sealed class SimpleParquetWriter : IDisposable
 
     public SimpleParquetWriter(string filename, int recordsInRowGroup = 65536, bool zstd = true, bool append = false)
     {
-        IsActive = true;
         _filename = filename;
         _recordsInRowGroup = recordsInRowGroup;
         _zstd = zstd;
@@ -116,16 +115,6 @@ public sealed class SimpleParquetWriter : IDisposable
     }
 
     private readonly List<string> _colsGotNow = [];
-
-    public void WriteField(string name, double val, int idx = -1)
-    {
-        WriteField<double>(name, val, idx);
-    }
-
-    public void WriteField(string name, float val, int idx = -1)
-    {
-        WriteField<float>(name, val, idx);
-    }
 
     private int _cursor = 0;
     private bool _writerThreadStarted;
@@ -365,9 +354,6 @@ public sealed class SimpleParquetWriter : IDisposable
             throw new InvalidOperationException($"duplicate column: {name}");
         }
     }
-
-
-    public bool IsActive { get; }
 
     public void NextRecord()
     {
