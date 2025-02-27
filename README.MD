@@ -6,6 +6,10 @@ A lightweight, efficient .NET library for writing Parquet files with a simple bu
 
 - Stream-like API for building dataframes row by row
 - Background thread writing for improved performance
+- Reasonable defaults for most use cases:
+  - zstandard compression
+  - disabled dictionary encoding for floating point numbers
+  - 64K rowgroups
 - Strong typing for various data types
 - Minimal memory footprint and allocations
 - No dictionary lookups for column names (uses ordered columns)
