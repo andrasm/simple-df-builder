@@ -34,7 +34,7 @@ public sealed class SimpleParquetWriter : IDisposable
     private readonly List<bool[]> _boolCols = [];
     private readonly List<int> _colIndices = [];
 
-    private byte[] _active;
+    private byte[]? _active;
 
     private bool _firstRowSeen;
     private int _colIx = 0;
@@ -283,7 +283,7 @@ public sealed class SimpleParquetWriter : IDisposable
         if (typeof(T) == typeof(string))
         {
             var str = val as string;
-            AddStringData(str);
+            AddStringData(str!);
         }
         else if (typeof(T) == typeof(Int32))
         {
@@ -433,10 +433,10 @@ public sealed class SimpleParquetWriter : IDisposable
         {
             _stringsArrCopy = _stringsArr.ToArray();
         }
-        _writeQueue.Add((_active, _cursor, _stringsArrCopy));
+        _writeQueue.Add((_active!, _cursor, _stringsArrCopy));
     }
 
-    private void WriterLoop(object obj)
+    private void WriterLoop(object? obj)
     {
         while (true)
         {
@@ -447,9 +447,9 @@ public sealed class SimpleParquetWriter : IDisposable
             {
                 (data, cursor, stringsArr) = _writeQueue.Take();
             }
-            catch (InvalidOperationException e)
+            catch (InvalidOperationException)
             {
-                if (_writeQueue.IsAddingCompleted && _writeQueue.Count == 0)
+                if (_writeQueue is { IsAddingCompleted: true, Count: 0 })
                 {
                     break;    
                 }
@@ -610,7 +610,7 @@ public sealed class SimpleParquetWriter : IDisposable
 
     private void WriteRowGroup(int dataCount = -1)
     {
-        using var groupWriter = _parquetWriter.AppendRowGroup();
+        using var groupWriter = _parquetWriter!.AppendRowGroup();
         int intColIx = 0;
         int longColIx = 0;
         int shortColIx = 0;
@@ -619,9 +619,8 @@ public sealed class SimpleParquetWriter : IDisposable
         int boolColIx = 0;
         int doubleColIx = 0;
         int dtColIx = 0;
-        for (var i = 0; i < _columns.Count; i++)
+        foreach (var column in _columns)
         {
-            var column = _columns[i];
             if (column.LogicalSystemType == typeof(double))
             {
                 WriteBatch(groupWriter, _doubleCols, ref doubleColIx, dataCount);

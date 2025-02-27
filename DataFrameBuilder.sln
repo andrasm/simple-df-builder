@@ -9,6 +9,7 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Deploy", "Deploy", "{D4FE9A
 	ProjectSection(SolutionItems) = preProject
 		README.MD = README.MD
 		LICENSE = LICENSE
+		deploy.sh = deploy.sh
 	EndProjectSection
 EndProject
 Global

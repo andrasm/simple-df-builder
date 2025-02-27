@@ -8,15 +8,20 @@
 
   <PropertyGroup>
     <PackageId>Bendo.SimpleDataFrameBuilder</PackageId>
-    <Version>0.1.0</Version>
+    <Version>0.1.1</Version>
     <Authors>andrasm</Authors>
     <Description>An efficient row-oriented dataframe builder and Parquet writer for .NET</Description>
     <PackageLicenseExpression>MIT</PackageLicenseExpression>
     <PackageProjectUrl>https://github.com/andrasm/simple-df-builder</PackageProjectUrl>
     <RepositoryUrl>https://github.com/andrasm/simple-df-builder</RepositoryUrl>
     <PackageTags>parquet;data;analytics</PackageTags>
+    <PackageReadmeFile>README.MD</PackageReadmeFile>
   </PropertyGroup>
 
+  <ItemGroup>
+    <None Include="../README.MD" Pack="true" PackagePath="\" />
+  </ItemGroup>
+  
   <ItemGroup>
     <PackageReference Include="ParquetSharp" Version="18.1.0" />
   </ItemGroup>
