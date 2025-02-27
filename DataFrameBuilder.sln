@@ -12,6 +12,8 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Deploy", "Deploy", "{D4FE9A
 		deploy.sh = deploy.sh
 	EndProjectSection
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Bendo.SimpleDataFrameBuilder.Tests", "Bendo.SimpleDataFrameBuilder.Tests\Bendo.SimpleDataFrameBuilder.Tests.csproj", "{00979539-A4C4-4CFE-A0F4-39AA634B6C92}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -25,5 +27,9 @@ Global
 		{B9C58EDA-6192-46F3-B20B-15991BA01AD2}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{B9C58EDA-6192-46F3-B20B-15991BA01AD2}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{B9C58EDA-6192-46F3-B20B-15991BA01AD2}.Release|Any CPU.Build.0 = Release|Any CPU
+		{00979539-A4C4-4CFE-A0F4-39AA634B6C92}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{00979539-A4C4-4CFE-A0F4-39AA634B6C92}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{00979539-A4C4-4CFE-A0F4-39AA634B6C92}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{00979539-A4C4-4CFE-A0F4-39AA634B6C92}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 EndGlobal

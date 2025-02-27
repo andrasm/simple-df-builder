@@ -29,6 +29,7 @@ public sealed class SimpleParquetWriter : IDisposable
     private readonly List<int[]> _intCols = [];
     private readonly List<short[]> _shortCols = [];
     private readonly List<long[]> _longCols = [];
+    private readonly List<ulong[]> _ulongCols = [];
     private readonly List<DateTime[]> _dateCols = [];
     private readonly List<string[]> _stringCols = [];
     private readonly List<bool[]> _boolCols = [];
@@ -179,6 +180,10 @@ public sealed class SimpleParquetWriter : IDisposable
             {
                 AddNewColIx(_shortCols);
             }
+            else if (typeof(T) == typeof(ulong))
+            {
+                AddNewColIx(_ulongCols);
+            }
             else
                 throw new NotSupportedException($"{typeof(T).FullName} is not supported");
             
@@ -250,6 +255,13 @@ public sealed class SimpleParquetWriter : IDisposable
                 if (val is short i16)
                 {
                     AddData(_shortCols, i16);
+                }
+            }
+            else if (typeof(T) == typeof(ulong))
+            {
+                if (val is ulong ui64)
+                {
+                    AddData(_ulongCols, ui64);
                 }
             }
             else
@@ -328,6 +340,13 @@ public sealed class SimpleParquetWriter : IDisposable
                 BitConverter.TryWriteBytes(_active.AsSpan().Slice(_cursor << 3, 8), i64);
             }
         }
+        else if (typeof(T) == typeof(ulong))
+        {
+            if (val is ulong ui64)
+            {
+                BitConverter.TryWriteBytes(_active.AsSpan().Slice(_cursor << 3, 8), ui64);
+            }
+        }
         else if (typeof(T) == typeof(short))
         {
             if (val is short i16)
@@ -367,7 +386,7 @@ public sealed class SimpleParquetWriter : IDisposable
 
             if (!_append && File.Exists(_filename))
             {
-                Logger($"deleting file as we are rewriting it: {_filename}");
+                Logger($"Deleting {_filename} as we are rewriting it.");
                 File.Delete(_filename);
             }
 
@@ -448,7 +467,7 @@ public sealed class SimpleParquetWriter : IDisposable
             WriteRowGroup(dataCount);
         }
         
-        Logger("exiting writer loop.");
+        Logger($"Leaving writer loop for {_filename}");
     }
     
     private void CopyToLists(byte[] active, int cursor, string[] stringsArr)
@@ -517,6 +536,13 @@ public sealed class SimpleParquetWriter : IDisposable
                     _boolCols[colIndex][dix++] = BitConverter.ToBoolean(data.Slice(i, 8));
                 }
             }
+            else if (column.LogicalSystemType == typeof(ulong))
+            {
+                for (int i = c * 8; i < len; i += stride)
+                {
+                    _ulongCols[colIndex][dix++] = BitConverter.ToUInt64(data.Slice(i, 8));
+                }
+            }
             else
             {
                 throw new NotSupportedException($"{column.LogicalSystemType} not supported");
@@ -561,6 +587,10 @@ public sealed class SimpleParquetWriter : IDisposable
             {
                 WriteField(column.Name, _boolCols[_colIndices[i]][0]);
             }
+            else if (column.LogicalSystemType == typeof(ulong))
+            {
+                WriteField(column.Name, _ulongCols[_colIndices[i]][0]);
+            }
             else
             {
                 throw new NotSupportedException($"{column.LogicalSystemType} not supported");
@@ -599,6 +629,7 @@ public sealed class SimpleParquetWriter : IDisposable
         using var groupWriter = _parquetWriter!.AppendRowGroup();
         int intColIx = 0;
         int longColIx = 0;
+        int ulongColIx = 0;
         int shortColIx = 0;
         int floatColIx = 0;
         int strColIx = 0;
@@ -639,6 +670,10 @@ public sealed class SimpleParquetWriter : IDisposable
             {
                 WriteBatch(groupWriter, _boolCols, ref boolColIx, dataCount);
             }
+            else if (column.LogicalSystemType == typeof(ulong))
+            {
+                WriteBatch(groupWriter, _ulongCols, ref ulongColIx, dataCount);
+            }
             else
             {
                 throw new NotSupportedException($"{column.LogicalSystemType} not supported");
@@ -672,7 +707,7 @@ public sealed class SimpleParquetWriter : IDisposable
 
         if (_writerThreadStarted)
         {
-            Logger("waiting for writer thread");
+            Logger($"Waiting for writer thread for {_filename}");
         
             _writerThread.Join();
         }
