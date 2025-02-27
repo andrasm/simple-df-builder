@@ -14,8 +14,7 @@ A lightweight, efficient .NET library for writing Parquet files with a simple bu
 ## Installation
 
 ```bash
-# not published yet
-# dotnet add package Bendo.SimpleDataFrameBuilder
+dotnet add package Bendo.SimpleDataFrameBuilder
 ```
 
 ## Quick Start
@@ -42,7 +41,8 @@ writer.NextRecord();
 
 // More records...
 
-// The file is written on a background thread and closed when the writer is disposed (dispose blocks the current thread).
+// The file is written on a background thread and closed when the writer 
+// is disposed (dispose blocks the current thread).
 ```
 
 ## Important Notes
@@ -51,7 +51,7 @@ writer.NextRecord();
 - The parquet file is written in a background thread and finalized when the writer is disposed
 - The writer must be disposed to ensure all data is written correctly
 - Try to avoid string construction in the `WriteField` method to reduce allocations (use string constants or reuse strings). 
-  - You can use the optional `int idx=-1` argument to help with this, e.g.:
+  - You can use the optional `int idx` argument to help with this, e.g.:
 
 #### Example: use the optional `idx` argument to avoid string construction:
 ```csharp
@@ -90,7 +90,7 @@ SimpleParquetWriter.VerifyColumnOrder = true;
 
 ## Project status
 
-Stable and used in production by the author. Just recently open-sourced and didn't bother porting the tests yet.
+Stable and used in production by the author.
 
 ## License
 
