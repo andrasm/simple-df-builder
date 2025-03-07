@@ -129,149 +129,12 @@ public sealed class SimpleParquetWriter : IDisposable
                 name = string.Format(name, idx.ToString());
             }
             
-            CheckDupeColumn(name);
+            AddNewColumn(name, val);
 
-            if (typeof(T) == typeof(decimal))
-            {
-                _columns.Add(new Column(typeof(double), name));
-            }
-            //else if (typeof(T) == typeof(DateTime))
-            //{
-            //    _columns.Add(new DateTimeDataField(name, DateTimeFormat.DateAndTime));
-            //}
-            else
-            {
-                _columns.Add(new Column(typeof(T), name));
-            }
-
-            if (typeof(T) == typeof(string))
-            {
-                AddNewColIx(_stringCols);
-            }
-            else if (typeof(T) == typeof(Int32))
-            {
-                AddNewColIx(_intCols);
-            }
-            else if (typeof(T) == typeof(double))
-            {
-                AddNewColIx(_doubleCols);
-            }
-            else if (typeof(T) == typeof(float))
-            {
-                AddNewColIx(_floatCols);
-            }
-            else if (typeof(T) == typeof(decimal))
-            {
-                AddNewColIx(_doubleCols);
-            }
-            else if (typeof(T) == typeof(bool))
-            {
-                AddNewColIx(_boolCols);
-            }
-            else if (typeof(T) == typeof(DateTime))
-            {
-                AddNewColIx(_dateCols);
-            }
-            else if (typeof(T) == typeof(long))
-            {
-                AddNewColIx(_longCols);
-            }
-            else if (typeof(T) == typeof(short))
-            {
-                AddNewColIx(_shortCols);
-            }
-            else if (typeof(T) == typeof(ulong))
-            {
-                AddNewColIx(_ulongCols);
-            }
-            else
-                throw new NotSupportedException($"{typeof(T).FullName} is not supported");
-            
-            if (typeof(T) == typeof(string))
-            {
-                var str = val as string;
-                if (str == null)
-                {
-                    ThrowHelperNull(name);
-                }
-                AddData(_stringCols, str);
-            }
-            else if (typeof(T) == typeof(Int32))
-            {
-                if (val is int i32)
-                {
-                    AddData(_intCols, i32);
-                }
-            }
-            else if (typeof(T) == typeof(double))
-            {
-                if (val is double d64)
-                {
-                    AddData(_doubleCols, d64);
-                }
-            }
-            else if (typeof(T) == typeof(float))
-            {
-                if (val is float d32)
-                {
-                    AddData(_floatCols, d32);
-                }
-            }
-            else if (typeof(T) == typeof(decimal))
-            {
-                if (val is decimal dec)
-                {
-                    AddData(_doubleCols, (double)dec);
-                }
-            }
-            else if (typeof(T) == typeof(bool))
-            {
-                if (val is bool b)
-                {
-                    AddData(_boolCols, b);
-                }
-            }
-            else if (typeof(T) == typeof(DateTime))
-            {
-                if (val is DateTime dt)
-                {
-                    if (dt.Kind != DateTimeKind.Utc)
-                    {
-                        throw new Exception($"{name} was not UTC!");
-                    }
-
-                    AddData(_dateCols, dt);
-                }
-            }
-            else if (typeof(T) == typeof(long))
-            {
-                if (val is long i64)
-                {
-                    AddData(_longCols, i64);
-                }
-            }
-            else if (typeof(T) == typeof(short))
-            {
-                if (val is short i16)
-                {
-                    AddData(_shortCols, i16);
-                }
-            }
-            else if (typeof(T) == typeof(ulong))
-            {
-                if (val is ulong ui64)
-                {
-                    AddData(_ulongCols, ui64);
-                }
-            }
-            else
-                throw new NotSupportedException($"{typeof(T).FullName} is not supported");
-
-            ++_colIx;
-            
             return;
         }
-        else if (VerifyColumnOrder)
+
+        if (VerifyColumnOrder)
         {
             if (idx >= 0)
             {
@@ -281,6 +144,33 @@ public sealed class SimpleParquetWriter : IDisposable
             _colsGotNow.Add(name);
         }
 
+        AddValue(val);
+    }
+
+    public void WriteFieldFmt<T>(string name, T val, string fmt)
+    {
+        if (!_firstRowSeen)
+        {
+            name = string.Format(name, fmt);
+
+            AddNewColumn(name, val);
+
+            return;
+        }
+
+        if (VerifyColumnOrder)
+        {
+            name = string.Format(name, fmt);
+
+            _colsGotNow.Add(name);
+        }
+
+        AddValue(val);
+    }
+
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    private void AddValue<T>(T val)
+    {
         if (typeof(T) == typeof(string))
         {
             var str = val as string;
@@ -327,7 +217,7 @@ public sealed class SimpleParquetWriter : IDisposable
             {
                 if (dt.Kind != DateTimeKind.Utc)
                 {
-                    throw new Exception($"{name} was not UTC!");
+                    throw new Exception($"{_columns[_colIx]} was not UTC!");
                 }
 
                 BitConverter.TryWriteBytes(_active.AsSpan().Slice(_cursor << 3, 8), DateTime.SpecifyKind(dt, DateTimeKind.Unspecified).Ticks);
@@ -359,6 +249,149 @@ public sealed class SimpleParquetWriter : IDisposable
 
         ++_colIx;
         ++_cursor;
+    }
+
+    private void AddNewColumn<T>(string name, T val)
+    {
+        CheckDupeColumn(name);
+
+        if (typeof(T) == typeof(decimal))
+        {
+            _columns.Add(new Column(typeof(double), name));
+        }
+        //else if (typeof(T) == typeof(DateTime))
+        //{
+        //    _columns.Add(new DateTimeDataField(name, DateTimeFormat.DateAndTime));
+        //}
+        else
+        {
+            _columns.Add(new Column(typeof(T), name));
+        }
+
+        if (typeof(T) == typeof(string))
+        {
+            AddNewColIx(_stringCols);
+        }
+        else if (typeof(T) == typeof(Int32))
+        {
+            AddNewColIx(_intCols);
+        }
+        else if (typeof(T) == typeof(double))
+        {
+            AddNewColIx(_doubleCols);
+        }
+        else if (typeof(T) == typeof(float))
+        {
+            AddNewColIx(_floatCols);
+        }
+        else if (typeof(T) == typeof(decimal))
+        {
+            AddNewColIx(_doubleCols);
+        }
+        else if (typeof(T) == typeof(bool))
+        {
+            AddNewColIx(_boolCols);
+        }
+        else if (typeof(T) == typeof(DateTime))
+        {
+            AddNewColIx(_dateCols);
+        }
+        else if (typeof(T) == typeof(long))
+        {
+            AddNewColIx(_longCols);
+        }
+        else if (typeof(T) == typeof(short))
+        {
+            AddNewColIx(_shortCols);
+        }
+        else if (typeof(T) == typeof(ulong))
+        {
+            AddNewColIx(_ulongCols);
+        }
+        else
+            throw new NotSupportedException($"{typeof(T).FullName} is not supported");
+            
+        if (typeof(T) == typeof(string))
+        {
+            var str = val as string;
+            if (str == null)
+            {
+                ThrowHelperNull(name);
+            }
+            AddData(_stringCols, str);
+        }
+        else if (typeof(T) == typeof(Int32))
+        {
+            if (val is int i32)
+            {
+                AddData(_intCols, i32);
+            }
+        }
+        else if (typeof(T) == typeof(double))
+        {
+            if (val is double d64)
+            {
+                AddData(_doubleCols, d64);
+            }
+        }
+        else if (typeof(T) == typeof(float))
+        {
+            if (val is float d32)
+            {
+                AddData(_floatCols, d32);
+            }
+        }
+        else if (typeof(T) == typeof(decimal))
+        {
+            if (val is decimal dec)
+            {
+                AddData(_doubleCols, (double)dec);
+            }
+        }
+        else if (typeof(T) == typeof(bool))
+        {
+            if (val is bool b)
+            {
+                AddData(_boolCols, b);
+            }
+        }
+        else if (typeof(T) == typeof(DateTime))
+        {
+            if (val is DateTime dt)
+            {
+                if (dt.Kind != DateTimeKind.Utc)
+                {
+                    throw new Exception($"{name} was not UTC!");
+                }
+
+                AddData(_dateCols, dt);
+            }
+        }
+        else if (typeof(T) == typeof(long))
+        {
+            if (val is long i64)
+            {
+                AddData(_longCols, i64);
+            }
+        }
+        else if (typeof(T) == typeof(short))
+        {
+            if (val is short i16)
+            {
+                AddData(_shortCols, i16);
+            }
+        }
+        else if (typeof(T) == typeof(ulong))
+        {
+            if (val is ulong ui64)
+            {
+                AddData(_ulongCols, ui64);
+            }
+        }
+        else
+            throw new NotSupportedException($"{typeof(T).FullName} is not supported");
+
+        ++_colIx;
     }
 
     private static void ThrowHelperNull(string name)
