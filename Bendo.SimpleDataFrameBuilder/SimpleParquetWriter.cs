@@ -195,7 +195,7 @@ public sealed class SimpleParquetWriter : IDisposable
                 {
                     throw new Exception($"{_columns[_colIx].Name} was not UTC!");
                 }
-                set.DateTimes[colArrIx][dataIx] = dt;
+                set.DateTimes[colArrIx][dataIx] = (dt.Ticks - UnixEpochTicks) / 10;
             }
         }
         else if (typeof(T) == typeof(long))
@@ -401,7 +401,7 @@ public sealed class SimpleParquetWriter : IDisposable
             }
             else if (column.LogicalSystemType == typeof(short))
             {
-                WriteBatchLogical(groupWriter, set.Shorts[shortColIx++], n);
+                WriteBatchPhysical<int, int>(groupWriter, set.Shorts[shortColIx++], n);
             }
             else if (column.LogicalSystemType == typeof(string))
             {
@@ -409,7 +409,7 @@ public sealed class SimpleParquetWriter : IDisposable
             }
             else if (column.LogicalSystemType == typeof(DateTime))
             {
-                WriteBatchLogical(groupWriter, set.DateTimes[dtColIx++], n);
+                WriteBatchPhysical<long, long>(groupWriter, set.DateTimes[dtColIx++], n);
             }
             else
             {
@@ -458,15 +458,17 @@ public sealed class SimpleParquetWriter : IDisposable
         }
     }
 
+    private const long UnixEpochTicks = 621355968000000000L;
+
     private sealed class ColumnSet
     {
         public readonly List<double[]> Doubles = [];
         public readonly List<float[]> Floats = [];
         public readonly List<int[]> Ints = [];
-        public readonly List<short[]> Shorts = [];
+        public readonly List<int[]> Shorts = [];
         public readonly List<long[]> Longs = [];
         public readonly List<ulong[]> Ulongs = [];
-        public readonly List<DateTime[]> DateTimes = [];
+        public readonly List<long[]> DateTimes = [];
         public readonly List<string[]> Strings = [];
         public readonly List<bool[]> Bools = [];
         public int Count;
