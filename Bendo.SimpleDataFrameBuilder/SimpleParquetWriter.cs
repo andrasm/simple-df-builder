@@ -16,7 +16,7 @@ public sealed class SimpleParquetWriter : IDisposable
     private readonly bool _append;
 
     private readonly BlockingCollection<ColumnSet> _writeQueue = new(1);
-    private readonly BlockingCollection<ColumnSet> _freeQueue = new(1);
+    private readonly BlockingCollection<ColumnSet> _freeQueue = new(2);
     private readonly Thread _writerThread;
 
     private readonly List<Column> _columns = [];
@@ -28,6 +28,7 @@ public sealed class SimpleParquetWriter : IDisposable
 
     private bool _firstRowSeen;
     private bool _writerThreadStarted;
+    private bool _disposed;
     private int _colIx;
     private int _dataIx;
     private ParquetFileWriter? _parquetWriter;
@@ -56,6 +57,7 @@ public sealed class SimpleParquetWriter : IDisposable
 
     public void WriteField<T>(string name, T val, int idx = -1)
     {
+        ThrowIfDisposed();
         if (!_firstRowSeen)
         {
             if (idx >= 0)
@@ -82,6 +84,7 @@ public sealed class SimpleParquetWriter : IDisposable
 
     public void WriteFieldFmt<T>(string name, T val, string fmt)
     {
+        ThrowIfDisposed();
         if (!_firstRowSeen)
         {
             name = string.Format(name, fmt);
@@ -102,6 +105,7 @@ public sealed class SimpleParquetWriter : IDisposable
 
     public void NextRecord()
     {
+        ThrowIfDisposed();
         if (!_firstRowSeen)
         {
             _firstRowSeen = true;
@@ -349,10 +353,7 @@ public sealed class SimpleParquetWriter : IDisposable
 
             WriteRowGroup(set);
             ClearReferences(set);
-            if (!_freeQueue.IsAddingCompleted)
-            {
-                _freeQueue.Add(set);
-            }
+            _freeQueue.Add(set);
         }
 
         Logger($"Leaving writer loop for {_filename}");
@@ -437,13 +438,15 @@ public sealed class SimpleParquetWriter : IDisposable
 
     public void Dispose()
     {
+        if (_disposed) return;
+        _disposed = true;
+
         if (_dataIx > 0)
         {
             _active.Count = _dataIx;
             _writeQueue.Add(_active);
         }
         _writeQueue.CompleteAdding();
-        _freeQueue.CompleteAdding();
 
         if (_writerThreadStarted)
         {
@@ -455,6 +458,14 @@ public sealed class SimpleParquetWriter : IDisposable
         if (_parquetWriter != null)
         {
             Logger($"Disposed parquet writer for {_filename}");
+        }
+    }
+
+    private void ThrowIfDisposed()
+    {
+        if (_disposed)
+        {
+            throw new ObjectDisposedException(nameof(SimpleParquetWriter));
         }
     }
 

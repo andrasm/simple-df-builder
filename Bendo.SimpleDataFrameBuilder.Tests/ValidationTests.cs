@@ -93,4 +93,37 @@ public class ValidationTests
         }
         finally { try { File.Delete(path); } catch { } }
     }
+
+    [Test]
+    public void WriteAfterDispose_Throws()
+    {
+        var path = TempFile();
+        try
+        {
+            var w = new SimpleParquetWriter(path);
+            w.WriteField("a", 1);
+            w.NextRecord();
+            w.Dispose();
+
+            Assert.Throws<ObjectDisposedException>(() => w.WriteField("a", 2));
+            Assert.Throws<ObjectDisposedException>(() => w.WriteFieldFmt("a", 2, "x"));
+            Assert.Throws<ObjectDisposedException>(() => w.NextRecord());
+        }
+        finally { try { File.Delete(path); } catch { } }
+    }
+
+    [Test]
+    public void DoubleDispose_Idempotent()
+    {
+        var path = TempFile();
+        try
+        {
+            var w = new SimpleParquetWriter(path);
+            w.WriteField("a", 1);
+            w.NextRecord();
+            w.Dispose();
+            Assert.DoesNotThrow(() => w.Dispose());
+        }
+        finally { try { File.Delete(path); } catch { } }
+    }
 }
