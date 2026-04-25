@@ -23,7 +23,7 @@
   </ItemGroup>
   
   <ItemGroup>
-    <PackageReference Include="ParquetSharp" Version="18.1.0" />
+    <PackageReference Include="ParquetSharp" Version="23.0.0.2" />
   </ItemGroup>
 
 </Project>
