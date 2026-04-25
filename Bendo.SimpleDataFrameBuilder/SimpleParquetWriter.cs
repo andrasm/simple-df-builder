@@ -1,6 +1,7 @@
 ﻿using System.Buffers;
 using System.Collections.Concurrent;
 using System.Runtime.CompilerServices;
+using System.Runtime.InteropServices;
 using ParquetSharp;
 using Encoding = System.Text.Encoding;
 
@@ -72,15 +73,15 @@ public sealed class SimpleParquetWriter : IDisposable
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     private void AddStringData(string str)
     {
-        var slot = _active.AsSpan().Slice(_cursor << 3, 8);
+        var slot = _active.AsSpan(_cursor << 3, 8);
         if (str.Length <= 7 && Encoding.UTF8.GetByteCount(str) <= 7)
         {
-            slot[0] = (byte)str.Length;
             var written = Encoding.UTF8.GetBytes(str, slot.Slice(1));
             if (written > 7)
             {
                 throw new InvalidOperationException("didn't expect to write more than 8 bytes");
             }
+            slot[0] = (byte)written;
             return;
         }
 
@@ -220,7 +221,7 @@ public sealed class SimpleParquetWriter : IDisposable
                     throw new Exception($"{_columns[_colIx]} was not UTC!");
                 }
 
-                BitConverter.TryWriteBytes(_active.AsSpan().Slice(_cursor << 3, 8), DateTime.SpecifyKind(dt, DateTimeKind.Unspecified).Ticks);
+                BitConverter.TryWriteBytes(_active.AsSpan().Slice(_cursor << 3, 8), dt.Ticks);
             }
         }
         else if (typeof(T) == typeof(long))
@@ -673,15 +674,15 @@ public sealed class SimpleParquetWriter : IDisposable
         {
             if (column.LogicalSystemType == typeof(double))
             {
-                WriteBatch(groupWriter, _doubleCols, ref doubleColIx, dataCount);
+                WriteBatchPhysical<double, double>(groupWriter, _doubleCols, ref doubleColIx, dataCount);
             }
             else if (column.LogicalSystemType == typeof(int))
             {
-                WriteBatch(groupWriter, _intCols, ref intColIx, dataCount);
+                WriteBatchPhysical<int, int>(groupWriter, _intCols, ref intColIx, dataCount);
             }
             else if (column.LogicalSystemType == typeof(long))
             {
-                WriteBatch(groupWriter, _longCols, ref longColIx, dataCount);
+                WriteBatchPhysical<long, long>(groupWriter, _longCols, ref longColIx, dataCount);
             }
             else if (column.LogicalSystemType == typeof(short))
             {
@@ -697,15 +698,15 @@ public sealed class SimpleParquetWriter : IDisposable
             }
             else if (column.LogicalSystemType == typeof(float))
             {
-                WriteBatch(groupWriter, _floatCols, ref floatColIx, dataCount);
+                WriteBatchPhysical<float, float>(groupWriter, _floatCols, ref floatColIx, dataCount);
             }
             else if (column.LogicalSystemType == typeof(bool))
             {
-                WriteBatch(groupWriter, _boolCols, ref boolColIx, dataCount);
+                WriteBatchPhysical<bool, bool>(groupWriter, _boolCols, ref boolColIx, dataCount);
             }
             else if (column.LogicalSystemType == typeof(ulong))
             {
-                WriteBatch(groupWriter, _ulongCols, ref ulongColIx, dataCount);
+                WriteBatchPhysical<ulong, long>(groupWriter, _ulongCols, ref ulongColIx, dataCount);
             }
             else
             {
@@ -727,6 +728,18 @@ public sealed class SimpleParquetWriter : IDisposable
         {
             lw.WriteBatch(values.AsSpan().Slice(0, dataCount));
         }
+    }
+
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    private void WriteBatchPhysical<TArr, TPhys>(RowGroupWriter groupWriter, List<TArr[]> dataArr, ref int ix, int dataCount)
+        where TArr : unmanaged
+        where TPhys : unmanaged
+    {
+        using var cw = (ColumnWriter<TPhys>)groupWriter.NextColumn();
+        var values = dataArr[ix++];
+        var n = dataCount < 0 ? values.Length : dataCount;
+        var span = MemoryMarshal.Cast<TArr, TPhys>(values.AsSpan(0, n));
+        cw.WriteBatch(n, ReadOnlySpan<short>.Empty, ReadOnlySpan<short>.Empty, span);
     }
 
     public void Dispose()
