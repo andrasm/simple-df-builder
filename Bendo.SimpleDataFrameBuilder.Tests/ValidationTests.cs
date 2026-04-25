@@ -50,9 +50,8 @@ public class ValidationTests
     }
 
     [Test]
-    public void VerifyColumnOrder_ExtraColumn_Throws()
+    public void ExtraColumn_Throws()
     {
-        SimpleParquetWriter.VerifyColumnOrder = true;
         var path = TempFile();
         try
         {
@@ -60,8 +59,7 @@ public class ValidationTests
             w.WriteField("a", 1);
             w.NextRecord();
             w.WriteField("a", 2);
-            w.WriteField("b", 3);
-            Assert.Throws<InvalidOperationException>(() => w.NextRecord());
+            Assert.Throws<InvalidOperationException>(() => w.WriteField("b", 3));
         }
         finally { try { File.Delete(path); } catch { } }
     }
